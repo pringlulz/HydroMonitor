@@ -1,0 +1,70 @@
+﻿@page "/addSensor"
+@using HydroMonitor.Models
+@using HydroMonitor.Repository
+@inherits ComponentBase
+
+@inject SensorDAO sensorDAO; //add the singleton from the application context
+@inject SensorTypeDAO sensorTypeDAO;
+
+
+<h3>AddSensor</h3>
+<section>
+    <label>Sensor Name</label>
+    <InputText @bind-Value="sensor.Name"/>
+
+    <label>IP Address</label>
+    <InputText @bind-Value="sensor.IpAddress" />
+    @* MAYBE: scan the local network first and present a list of valid IP addresses? *@
+
+    <InputSelect @bind-Value="selectedType" @onselectionchange=typeChanged>
+        @foreach (var type in sensorTypes)
+        {
+            <option value="@type">@type.Name</option>
+        }
+        @*         @foreach (var type in Enum.GetValues(typeof(MeasurementType)))
+        {
+            <option value="@type">@type</option>
+        } *@
+    </InputSelect>
+
+    <button class="btn btn-primary" @onclick="submit">Click me</button>
+
+</section>
+
+Placeholder page for the sensor management component.
+
+@code {
+
+    private SensorType? selectedType { get; set; }
+    private Sensor? sensor { get; set; }
+    private List<SensorType>? sensorTypes { get; set; }
+
+
+    protected override async Task  OnInitializedAsync()
+    {
+        sensor = new Sensor();
+        sensorTypes = await sensorTypeDAO.Load();
+        System.Diagnostics.Debug.WriteLine($"loaded sensor type list");
+    }
+
+
+
+
+
+    public void typeChanged()
+    {
+        sensor.SensorType = selectedType;
+        sensor.SensorTypeId = selectedType.typeId;
+    }
+
+    public async void submit()
+    {
+        //TODO: send to database
+        if (sensor != null)
+        {
+            await sensorDAO.Save(sensor);
+            System.Diagnostics.Debug.WriteLine($"Saved sensor as id: {sensor.SensorId}");
+        }
+    }
+
+}
