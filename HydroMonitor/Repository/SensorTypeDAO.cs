@@ -20,9 +20,9 @@ namespace HydroMonitor.Repository
         public async void AddDefaultSensorTypes()
         {
             await Init();
-            SensorType check = Load("Humidity").Result;
-            if (check.typeId == 0) { 
-                SensorType newSensorType = new SensorType
+            SensorType check = await Load("Humidity");
+            if (check == null || check.typeId == 0) { 
+                SensorType newSensorType = new SensorType()
                 {
                     Name = "Humidity",
                     measurementType = MeasurementType.Percentage

@@ -8,26 +8,32 @@
 
 
 <h3>AddSensor</h3>
-<section>
-    <label>Sensor Name</label>
-    <InputText @bind-Value="sensor.Name"/>
+<section class="col-md-6">
+    <div>
+        <label>Sensor Name</label>
+        <InputText @bind-Value="sensor.Name"/>
+    </div>
 
-    <label>IP Address</label>
-    <InputText @bind-Value="sensor.IpAddress" />
+    <div>
+        <label>IP Address</label>
+        <InputText @bind-Value="sensor.IpAddress" />
+    </div>
     @* MAYBE: scan the local network first and present a list of valid IP addresses? *@
+    <div>
+        <InputSelect @bind-Value="selectedType" @onselectionchange=typeChanged>
+            @foreach (var type in sensorTypes)
+            {
+                <option value="@type">@type.Name</option>
+            }
+        </InputSelect>
+    </div>
+    <button class="btn btn-primary" @onclick="submit">Save</button>
+</section>
 
-    <InputSelect @bind-Value="selectedType" @onselectionchange=typeChanged>
-        @foreach (var type in sensorTypes)
-        {
-            <option value="@type">@type.Name</option>
-        }
-        @*         @foreach (var type in Enum.GetValues(typeof(MeasurementType)))
-        {
-            <option value="@type">@type</option>
-        } *@
-    </InputSelect>
+<section class="col-md-6">
+    @* map goes here*@
 
-    <button class="btn btn-primary" @onclick="submit">Click me</button>
+
 
 </section>
 
@@ -37,7 +43,7 @@ Placeholder page for the sensor management component.
 
     private SensorType? selectedType { get; set; }
     private Sensor? sensor { get; set; }
-    private List<SensorType>? sensorTypes { get; set; }
+    private List<SensorType>? sensorTypes { get; set; } = new List<SensorType>();
 
 
     protected override async Task  OnInitializedAsync()
@@ -45,8 +51,8 @@ Placeholder page for the sensor management component.
         sensor = new Sensor();
         sensorTypes = await sensorTypeDAO.Load();
         System.Diagnostics.Debug.WriteLine($"loaded sensor type list");
+        StateHasChanged();
     }
-
 
 
 
@@ -59,12 +65,15 @@ Placeholder page for the sensor management component.
 
     public async void submit()
     {
-        //TODO: send to database
+        //send to database
         if (sensor != null)
         {
             await sensorDAO.Save(sensor);
             System.Diagnostics.Debug.WriteLine($"Saved sensor as id: {sensor.SensorId}");
         }
+
+        //TODO: add confirmation message to webpage
+
     }
 
 }

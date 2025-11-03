@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using HydroMonitor.Services;
 using HydroMonitor.Repository;
+using Syncfusion.Maui.Toolkit.Hosting;
 namespace HydroMonitor
 {
     public static class MauiProgram
@@ -14,6 +15,7 @@ namespace HydroMonitor
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .ConfigureSyncfusionToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -23,6 +25,7 @@ namespace HydroMonitor
             builder.Services.AddSingleton<MQTTService>(); //this uses MQTTnet to subscribe to the data coming out of the raspberry pi
             builder.Services.AddSingleton<SensorTypeDAO>();
             builder.Services.AddSingleton<SensorDAO>( ); //this is the database connector for the Sensor object
+            
 
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
