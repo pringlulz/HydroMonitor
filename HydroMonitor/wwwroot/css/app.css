@@ -2,6 +2,17 @@
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+
+.form-group {
+    padding: 5px;
+
+}
+
+.form-group .form-label {
+    font-weight : bold;
+}
+
+
 a, .btn-link {
     color: #006bb7;
 }

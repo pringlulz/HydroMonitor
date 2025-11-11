@@ -22,6 +22,7 @@ namespace HydroMonitor
                 });
 
             builder.Services.AddMauiBlazorWebView();
+            builder.Services.AddBlazorBootstrap();
             builder.Services.AddSingleton<MQTTService>(); //this uses MQTTnet to subscribe to the data coming out of the raspberry pi
             builder.Services.AddSingleton<SensorTypeDAO>();
             builder.Services.AddSingleton<SensorDAO>( ); //this is the database connector for the Sensor object
