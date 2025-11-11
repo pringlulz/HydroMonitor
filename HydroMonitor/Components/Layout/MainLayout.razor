@@ -1,9 +1,17 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager _navManager
 
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
+    
+    @if (_navManager.Uri.Contains("manageSensors"))
+    {@*  add an extra sidebar if we're on the manage sensors screen' *@
+        <div class="sidebar">
+            <HydroMonitor.Components.Pages.SensorList />
+        </div>
+    }
 
     <main>
         <div class="top-row px-4">

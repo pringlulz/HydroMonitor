@@ -1,0 +1,15 @@
+.modal {
+    position: fixed;
+    left: 25%;
+    top: 25%;
+    width: 50%;
+    height: 50%;
+    padding: 15px;
+}
+
+.modal .modal-content {
+    height: 100%
+}
+.modal .modal-close {
+
+}

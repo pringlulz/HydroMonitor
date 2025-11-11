@@ -1,0 +1,24 @@
+﻿@* courtesy of copilot *@
+
+<div class="modal @(IsVisible ? "show" : "")" style="display:@(IsVisible ? "block" : "none")">
+    <span class="modal-close float-end"><button @onclick="Close">x</button></span>
+    <div class="modal-content">
+        
+        @ChildContent
+
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        await OnClose.InvokeAsync();
+    }
+
+}

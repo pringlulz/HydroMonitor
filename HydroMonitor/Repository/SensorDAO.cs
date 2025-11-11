@@ -34,7 +34,13 @@ namespace HydroMonitor.Repository
         public async Task<Sensor> Load(int sensorId)
         {
             await Init();
-            return await _database.GetAsync<Sensor>(sensorId);
+            try
+            {
+                return await _database.GetAsync<Sensor>(sensorId);
+            } catch (InvalidOperationException) {
+                return new Sensor();
+            }
+            
         }
 
         public async Task<List<Sensor>> Load()

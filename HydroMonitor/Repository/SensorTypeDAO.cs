@@ -21,6 +21,7 @@ namespace HydroMonitor.Repository
         {
             await Init();
             SensorType check = await Load("Humidity");
+            //System.Diagnostics.Debug.WriteLine($"Does the humidity sensortype already exist?" + check.Name + " " + check.typeId);
             if (check == null || check.typeId == 0) { 
                 SensorType newSensorType = new SensorType()
                 {
@@ -33,7 +34,7 @@ namespace HydroMonitor.Repository
 
         }
 
-        public async Task<SensorType> Load(String name)
+        public async Task<SensorType> Load(String name) 
         { //load by name instead of typeId
             await Init();
             return await _database.Table<SensorType>().Where(st => st.Name.Equals(name)).FirstOrDefaultAsync();

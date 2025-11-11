@@ -1,38 +1,38 @@
 ﻿@page "/addSensor"
 @using HydroMonitor.Models
 @using HydroMonitor.Repository
+
 @inherits ComponentBase
 
 @inject SensorDAO sensorDAO; //add the singleton from the application context
 @inject SensorTypeDAO sensorTypeDAO;
+@* @inject List<SensorType> SensorTypes; *@ 
 
 
-<h3>AddSensor</h3>
-<section class="col-md-6">
-    <div>
-        <label>Sensor Name</label>
-        <InputText @bind-Value="sensor.Name"/>
-    </div>
-
-    <div>
-        <label>IP Address</label>
-        <InputText @bind-Value="sensor.IpAddress" />
+<h3>Add Sensor</h3>
+<section class="col-lg-6 col-sm-12">
+    
+    <div class="form-group">
+        <label class="form-label">IP Address</label>
+        <InputText @bind-Value="sensor.IpAddress" class="form-control" />
     </div>
     @* MAYBE: scan the local network first and present a list of valid IP addresses? *@
-    <div>
-        <InputSelect @bind-Value="selectedType" @onselectionchange=typeChanged>
-            @foreach (var type in sensorTypes)
-            {
-                <option value="@type">@type.Name</option>
-            }
-        </InputSelect>
+    <div class="form-group">
+        <label class="form-label">Sensor Type
+            <InputSelect class="form-select" @bind-Value="selectedType" @onselectionchange=typeChanged>
+                @foreach (var type in sensorTypes)
+                {
+                    <option value="@type">@type.Name</option>
+                }
+            </InputSelect>
+        </label>
     </div>
-    <button class="btn btn-primary" @onclick="submit">Save</button>
+    <button class="btn btn-primary col-sm-3" @onclick="submit">Save</button>
 </section>
 
-<section class="col-md-6">
+<section class="col-lg-6 col-sm-12">
     @* map goes here*@
-
+    <Image Source="dotnet_bot.png"/>
 
 
 </section>
@@ -53,8 +53,6 @@ Placeholder page for the sensor management component.
         System.Diagnostics.Debug.WriteLine($"loaded sensor type list");
         StateHasChanged();
     }
-
-
 
 
     public void typeChanged()

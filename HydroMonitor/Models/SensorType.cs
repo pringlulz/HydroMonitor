@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SQLite;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,7 @@ namespace HydroMonitor.Models
     }
     public class SensorType
     {
+        [PrimaryKey, AutoIncrement]
         public int typeId { get; set; }
         public String Name { get; set; }
         public MeasurementType measurementType { get; set; }

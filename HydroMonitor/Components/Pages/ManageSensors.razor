@@ -1,9 +1,110 @@
-﻿@page "/viewSensors"
+﻿@page "/manageSensors/{sensorId:int?}"
+@using HydroMonitor.Models
+@using HydroMonitor.Repository
 
-<h3>ManageSensors</h3>
 
+
+@inject SensorDAO sensorDAO;
+@inject SensorTypeDAO sensorTypeDAO;
+@inject NavigationManager Navigation;
+
+<h3>Manage Sensor</h3>
+@* 
 Displays a list of all stored sensor components.
 
+<section>
+    @foreach (var sensor in sensorList)
+    {
+        <ListItem item=@(new KeyValuePair<int, string>(sensor.SensorId, sensor.Name))/>
+    }
+
+</section>
+ *@
+
+@if (sensor != null)
+{
+
+    <HydroMonitor.Components.Modal IsVisible="@isModalVisible" >
+        <MapPicker></MapPicker>
+
+    </HydroMonitor.Components.Modal>
+    <div class="form-group">
+        <label class="form-label">
+            Sensor Name
+            <InputText class="form-control" @bind-Value="sensor.Name" />
+        </label>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">IP Address</label>
+        <InputText @bind-Value="sensor.IpAddress" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">
+            Sensor Type
+            <InputSelect class="form-select" @bind-Value="sensor.SensorType" @onselectionchange=typeChanged>
+                @foreach (var type in sensorTypes)
+                {
+                    <option value="@type">@type.Name</option>
+                }
+            </InputSelect>
+        </label>
+    </div>
+    <div class="form-group">
+        <button class="btn btn-primary col-sm-3" @onclick="runMapPicker">Pick Location</button>
+    </div>
+    <div class="form-group">
+        <button class="btn btn-primary col-sm-3" @onclick="submit">Save</button>
+    </div>
+
+}
+
+
+
 @code {
+
+    [Parameter]
+    public int? sensorId { get; set; }
+
+    Sensor? sensor;
+    private List<SensorType>? sensorTypes { get; set; } = new List<SensorType>();
+
+    private bool isModalVisible = false;
+
+    public ManageSensors()
+    {
+
+    }
+
+    public void typeChanged()
+    {
+        sensor.SensorTypeId = sensor.SensorType.typeId;
+    }
+
+    public void submit()
+    {
+        //save the sensor
+
+    }
+    public async Task runMapPicker()
+    { //opens the map picker modal
+        isModalVisible = true;
+    }
+
+
+    protected async override void OnParametersSet() {
+        this.sensor = await sensorDAO.Load(sensorId ?? 0);
+        StateHasChanged();
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        sensorTypes = await sensorTypeDAO.Load();
+        StateHasChanged();
+    }
+
+
 
 }
