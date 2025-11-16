@@ -11,6 +11,10 @@ namespace HydroMonitor.Models
     {
         [PrimaryKey]
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        [PrimaryKey]
+        public int SensorId { get; set; }
+
+
         MeasurementType Type;
         public String? rawValue { get; set; }
         

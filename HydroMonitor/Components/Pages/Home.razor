@@ -1,10 +1,9 @@
 ﻿@page "/"
+@using Services
+@inject MQTTService service; //starts the mqtt service when the app starts
+<h1>HydroMonitor</h1>
 
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
-
-
+Welcome to your HydroMonitor instance!
 
 
 @code {

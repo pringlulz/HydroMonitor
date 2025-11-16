@@ -1,12 +1,16 @@
 ﻿@page "/manageSensors/{sensorId:int?}"
 @using HydroMonitor.Models
 @using HydroMonitor.Repository
+@using HydroMonitor.Services
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Components.Forms @* //enables us to use form validation. TODO... *@
 
 
 
 @inject SensorDAO sensorDAO;
 @inject SensorTypeDAO sensorTypeDAO;
 @inject NavigationManager Navigation;
+@inject MQTTService mqttService;
 
 <h3>Manage Sensor</h3>
 @* 
@@ -34,10 +38,11 @@ Displays a list of all stored sensor components.
             <InputText class="form-control" @bind-Value="sensor.Name" />
         </label>
     </div>
-
+    @* Need to add EditForm to get validation stuff working. *@
     <div class="form-group">
-        <label class="form-label">IP Address</label>
-        <InputText @bind-Value="sensor.IpAddress" class="form-control" />
+        <label class="form-label">MAC Address</label>
+        <InputText @bind-Value="sensor.macAddress" class="form-control" />
+        @* <ValidationMessage For="@(() => sensor.macAddress)" /> *@
     </div>
 
     <div class="form-group">
@@ -55,7 +60,7 @@ Displays a list of all stored sensor components.
         <button class="btn btn-primary col-sm-3" @onclick="runMapPicker">Pick Location</button>
     </div>
     <div class="form-group">
-        <button class="btn btn-primary col-sm-3" @onclick="submit">Save</button>
+        <button class="btn btn-primary col-sm-3" @onclick="submit" type="submit">Save</button>
     </div>
 
 }
@@ -63,13 +68,14 @@ Displays a list of all stored sensor components.
 
 
 @code {
+    [CascadingParameter] EditContext CascaedEditContext { get; set; }
 
     [Parameter]
     public int? sensorId { get; set; }
 
     Sensor? sensor;
     private List<SensorType>? sensorTypes { get; set; } = new List<SensorType>();
-
+    private ValidationMessageStore messageStore;
     private bool isModalVisible = false;
 
     public ManageSensors()
@@ -81,11 +87,43 @@ Displays a list of all stored sensor components.
     {
         sensor.SensorTypeId = sensor.SensorType.typeId;
     }
+    //WIP... needs EditForm and OnValidSubmit to work properly.
+    private void HandleValidSubmit(EditContext editContext)
+    { // props to: https://stackoverflow.com/questions/69724492/blazor-editform-custom-validation-message-on-form-submission
+        Regex r = new Regex("^([0-9a-fA-F]{2}(?:[:]?[0-9a-fA-F]{2}){5})$");
+        if (r.Matches(sensor.macAddress).Count == 0)
+        {
+            messageStore = new ValidationMessageStore(editContext);
+            messageStore.Add(() => sensor.macAddress, "The MAC address must match the correct format: XX:XX:XX:XX");
+            editContext.NotifyValidationStateChanged();
+            return;
+        }
+        submit();
+    }
+
 
     public void submit()
     {
         //save the sensor
+        if (sensorId == 0 || sensor.SensorId == 0) {
+            //show an error message?
+            return;
+        }
 
+        Regex r = new Regex("^([0-9a-fA-F]{2}(?:[:]?[0-9a-fA-F]{2}){5})$");
+        if (sensor.macAddress is null ||  r.Matches(sensor.macAddress).Count == 0)
+        {//show an error message?
+            //Alert("The mac address isn't in the right format!");
+            return;
+        }
+        if (sensor.macAddress is not null)
+            MQTTService.UnpublishHookMessage(sensor.macAddress);
+
+        sensor.macAddress = sensor.macAddress.ToLower();
+        //unpublish the message on the old topic
+        //should ideally be done as a transaction so we don't just nuke the hook message for no reason
+        sensorDAO.Save(sensor); //theoretically the sensor ID gets updated here
+        MQTTService.PublishHookMessage(sensor);
     }
     public async Task runMapPicker()
     { //opens the map picker modal

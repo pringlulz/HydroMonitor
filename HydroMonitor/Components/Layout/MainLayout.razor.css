@@ -19,7 +19,7 @@ body {
 .sidebar { /*courtesy of copilot tbh*/
     margin: 0;
     height: 100vh;
-    background: linear-gradient(135deg, #1e90ff, #00bfff, #87cefa);
+    background: linear-gradient(135deg, #1a72c8, #00bfff, #87cefa);
     background-size: 400% 400%;
     animation: waterFlow 8s ease-in-out infinite;
     --filter: (

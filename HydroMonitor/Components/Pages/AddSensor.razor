@@ -1,11 +1,13 @@
 ﻿@page "/addSensor"
 @using HydroMonitor.Models
 @using HydroMonitor.Repository
+@using HydroMonitor.Services
 
 @inherits ComponentBase
 
 @inject SensorDAO sensorDAO; //add the singleton from the application context
 @inject SensorTypeDAO sensorTypeDAO;
+@inject GeolocationService geolocation;
 @* @inject List<SensorType> SensorTypes; *@ 
 
 
@@ -13,8 +15,8 @@
 <section class="col-lg-6 col-sm-12">
     
     <div class="form-group">
-        <label class="form-label">IP Address</label>
-        <InputText @bind-Value="sensor.IpAddress" class="form-control" />
+        <label class="form-label">MAC Address</label>
+        <InputText @bind-Value="sensor.macAddress" class="form-control" />
     </div>
     @* MAYBE: scan the local network first and present a list of valid IP addresses? *@
     <div class="form-group">
@@ -57,9 +59,16 @@ Placeholder page for the sensor management component.
 
     public void typeChanged()
     {
+       
         sensor.SensorType = selectedType;
         sensor.SensorTypeId = selectedType.typeId;
     }
+
+    public async void displayMapLocation()
+    {
+        
+    }
+
 
     public async void submit()
     {

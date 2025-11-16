@@ -15,6 +15,7 @@ namespace HydroMonitor.Models
         public int SensorId { get; set;}
         public String Name { get; set; }
         public String IpAddress { get; set; }
+        public String macAddress { get; set; }
 
         //[ForeignKey(typeof(SensorType))]
         public int SensorTypeId { get; set; }

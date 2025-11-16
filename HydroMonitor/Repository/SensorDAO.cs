@@ -9,9 +9,13 @@ using static SQLite.SQLite3;
 
 namespace HydroMonitor.Repository
 {
-    public  class SensorDAO : DatabaseConnector<Sensor>
+    public  class SensorDAO : DatabaseConnector<Sensor>, IDisposable
     {
+        private bool disposedValue;
+
         //TODO: add CRUD stuff
+
+
 
         public async Task<bool> Save(Sensor sensor)
         {
@@ -34,25 +38,33 @@ namespace HydroMonitor.Repository
         public async Task<Sensor> Load(int sensorId)
         {
             await Init();
+
             try
             {
-                return await _database.GetAsync<Sensor>(sensorId);
+                Sensor result = await _database.GetAsync<Sensor>(sensorId);
+                using (SensorTypeDAO stDAO = new SensorTypeDAO()) {
+                    result.SensorType = await stDAO.Load(result.SensorTypeId);
+                 }
+                return result;
             } catch (InvalidOperationException) {
                 return new Sensor();
             }
             
         }
 
+        //public async Task<Sensor>
+
         public async Task<List<Sensor>> Load()
         {
             await Init();
+            
             return await _database.Table<Sensor>().ToListAsync();
         }
 
         public async Task<bool> Disable(Sensor sensor)
         {
             await Init();
-            return await _database.ExecuteAsync("UPDATE Sensor SET enabled = false") != 0;
+            return await _database.ExecuteAsync("UPDATE Sensor SET enabled = false WHERE sensorId = ?", sensor.SensorId)!= 0;
         }
         public async Task<bool> Remove(Sensor sensor)
         {
@@ -60,7 +72,35 @@ namespace HydroMonitor.Repository
             return await _database.DeleteAsync(sensor) != 0;
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    //think this is correct?
+                    _database.CloseAsync();
+                    _database = null;
+                }
 
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
 
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~SensorDAO()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }
