@@ -1,4 +1,5 @@
-﻿using HydroMonitor.Models;
+﻿using HydroMonitor.Interfaces;
+using HydroMonitor.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,12 +10,16 @@ using static SQLite.SQLite3;
 
 namespace HydroMonitor.Repository
 {
-    public  class SensorDAO : DatabaseConnector<Sensor>, IDisposable
+    public  class SensorDAO : DatabaseConnector<Sensor>, IRepository<Sensor>, IDisposable
     {
         private bool disposedValue;
+        private readonly IRepository<SensorType> _stDAO;
 
         //TODO: add CRUD stuff
-
+        public SensorDAO(IRepository<SensorType> stDAO)
+        {
+            _stDAO = stDAO;
+        }
 
 
         public async Task<bool> Save(Sensor sensor)
@@ -42,9 +47,10 @@ namespace HydroMonitor.Repository
             try
             {
                 Sensor result = await _database.GetAsync<Sensor>(sensorId);
-                using (SensorTypeDAO stDAO = new SensorTypeDAO()) {
-                    result.SensorType = await stDAO.Load(result.SensorTypeId);
-                 }
+                if (result.SensorTypeId != 0)
+                {
+                    result.SensorType = await _stDAO.Load(result.SensorTypeId);
+                }
                 return result;
             } catch (InvalidOperationException) {
                 return new Sensor();

@@ -9,9 +9,12 @@ namespace HydroMonitor.Models
 {
     public class SensorReading
     {
-        [PrimaryKey]
+        [PrimaryKey] //sqlite-net kinda sucks and doesn't support composite keys. So we gotta do this.
+        private long readingId { get; set; }
+
+        [Indexed(Name = "CompositeKey", Order = 1, Unique = true)]
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-        [PrimaryKey]
+        [Indexed(Name = "CompositeKey", Order = 2, Unique = true)]
         public int SensorId { get; set; }
 
 

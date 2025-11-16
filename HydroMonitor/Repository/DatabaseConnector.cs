@@ -40,7 +40,10 @@ namespace HydroMonitor.Repository
         protected async Task Destroy()
         {
             if (_database != null)
+            {
                 await _database.CloseAsync();
+                _database = null;
+            }
         }
 
     }

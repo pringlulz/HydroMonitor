@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using HydroMonitor.Services;
+﻿using HydroMonitor.Interfaces;
+using HydroMonitor.Models;
 using HydroMonitor.Repository;
+using HydroMonitor.Services;
+using Microsoft.Extensions.Logging;
 using Syncfusion.Maui.Toolkit.Hosting;
 namespace HydroMonitor
 {
@@ -17,14 +19,22 @@ namespace HydroMonitor
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
-
+            
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddBlazorBootstrap();
-            builder.Services.AddSingleton<MQTTService>(); //this uses MQTTnet to subscribe to the data coming out of the raspberry pi
-            builder.Services.AddSingleton<SensorTypeDAO>();
-            builder.Services.AddSingleton<GeolocationService>();
-            builder.Services.AddSingleton<SensorDAO>( ); //this is the database connector for the Sensor object
 
+            builder.Services.AddSingleton<SensorTypeDAO>();
+            builder.Services.AddSingleton<SensorReadingDAO>();
+            builder.Services.AddSingleton<GeolocationService>();
+            builder.Services.AddSingleton<SensorDAO>( sp =>
+            {
+                return new SensorDAO(sp.GetRequiredService<SensorTypeDAO>());
+            } ); //this is the database connector for the Sensor object
+
+            builder.Services.AddSingleton<MQTTService>(sp =>
+            {
+                return new MQTTService(sp.GetRequiredService<SensorDAO>(), sp.GetRequiredService<SensorReadingDAO>());
+            }); //this uses MQTTnet to subscribe to the data coming out of the raspberry pi
 
 
 

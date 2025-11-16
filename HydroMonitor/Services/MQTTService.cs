@@ -20,7 +20,10 @@ namespace HydroMonitor.Services
     {
         private static IMqttClient? _client;
         private static MqttServer? _server;
-        private static SensorReadingDAO readingDAO;
+        private readonly SensorReadingDAO _readingDAO;
+        private readonly SensorDAO _sensorDAO;
+
+
 
         private static string baseTopic = "hydromon/sensor/";
         
@@ -28,13 +31,15 @@ namespace HydroMonitor.Services
         //this defines our different handlers for the different types of sensors 
 
 
-        public MQTTService()
+        public  MQTTService(SensorDAO sensorDAO, SensorReadingDAO readingDAO)
         {
+            _sensorDAO = sensorDAO;
+            _readingDAO = readingDAO;
             OpenAndSubscribe();
             SetupBroker();
         }
 
-        public static async Task SetupBroker()
+        public async Task SetupBroker()
         {
             var factory = new MqttServerFactory();
             var options = new MqttServerOptionsBuilder()
@@ -56,11 +61,9 @@ namespace HydroMonitor.Services
             //_server.
         }
 
-        public static async Task PublishHookMessages()
+        public async Task PublishHookMessages()
         {
-            using (SensorDAO sensorDAO = new SensorDAO())
-            {
-                List<Sensor> sensors = await sensorDAO.Load();
+                List<Sensor> sensors = await _sensorDAO.Load();
 
                 foreach (var sensor in sensors)
                 { //create a message on the broker that the client can listen for. This message tells the client which topic to write to.
@@ -68,14 +71,10 @@ namespace HydroMonitor.Services
                     //But, at least this way, the client gets to firmly establish a connection with the broker before broadcasting.
                      PublishHookMessage(sensor);
                 }
-
-
-
-            }
         }
 
 
-        public static async Task UnpublishHookMessage(String macAddress)
+        public async Task UnpublishHookMessage(String macAddress)
         {
             var message = new MqttApplicationMessageBuilder().WithTopic($"hydromon/setup/{macAddress.ToLower()}").WithPayload(Array.Empty<byte>()).WithRetainFlag(false).Build();
             await _server.InjectApplicationMessage(new InjectedMqttApplicationMessage(message)
@@ -85,7 +84,7 @@ namespace HydroMonitor.Services
             System.Diagnostics.Debug.WriteLine($"cleared registration for : {macAddress}");
         }
 
-        public static async Task PublishHookMessage(Sensor sensor)
+        public async Task PublishHookMessage(Sensor sensor)
         {
             if (sensor.macAddress == "") { return; } //skip entries with no mac address
             JsonDocument jsonMessage = JsonDocument.Parse($"{{\"target\": \"{sensor.macAddress}\", \"id\": {sensor.SensorId}}}");
@@ -104,7 +103,7 @@ namespace HydroMonitor.Services
 
         //10.0.2.15
 
-        public static async Task OpenAndSubscribe()
+        public async Task OpenAndSubscribe()
         {
             System.Diagnostics.Debug.WriteLine("Starting subscribe...");
             var factory = new MqttClientFactory();
@@ -146,7 +145,7 @@ namespace HydroMonitor.Services
             System.Diagnostics.Debug.WriteLine(response.Items.ElementAt(0).TopicFilter);
 
             //this is the response handler
-            mqttClient.ApplicationMessageReceivedAsync += m =>
+            mqttClient.ApplicationMessageReceivedAsync += async m =>
             {
                 var matches = topicSensorRegex.Match(m.ApplicationMessage.Topic);
                 System.Diagnostics.Debug.WriteLine(m.ApplicationMessage.Topic);
@@ -159,9 +158,9 @@ namespace HydroMonitor.Services
                 if (sensorId != 0)
                 {
 
-                    using (SensorDAO sensorDAO = new SensorDAO()) {
-
-                        Sensor sensor = sensorDAO.Load(sensorId);
+                        //TODO: what if a mac address is able to report multiple sensors?
+                        
+                        Sensor sensor = await _sensorDAO.Load(sensorId); //check that topic matches the value we're expecting?
 
                         JsonDocument jsonMessage = JsonDocument.Parse(m.ApplicationMessage.ConvertPayloadToString());
                         JsonElement readingElem;
@@ -170,14 +169,23 @@ namespace HydroMonitor.Services
                         if (jsonMessage.RootElement.TryGetProperty(Encoding.ASCII.GetBytes("reading").AsSpan(), out readingElem)) { 
                             readingElem.TryGetProperty(Encoding.ASCII.GetBytes("timestamp").AsSpan(), out timestampElem);
                             readingElem.TryGetProperty(Encoding.ASCII.GetBytes("value").AsSpan(), out valueElem);
+
+                            //check that the topic matches
+                            if (!m.ApplicationMessage.Topic.ToLower().EndsWith(sensor.SensorType.Name.ToLower()))
+                            { //discard the message, it's not for the topic we're looking for
+                                return;
+                            }
+
+
                             System.Diagnostics.Debug.WriteLine(sensor.SensorType.Name);
                             switch (sensor.SensorType.Name) {
-                                case "Temperature":
-                                    SaveToDatabase(valueElem.GetString(), sensorId, timestampElem.GetDateTime());
+                                case "Temperature": //valueElem extract needs to match source datatype for the JSON, convert to string after
+                                    SaveToDatabase(valueElem.GetInt32().ToString(), sensorId, timestampElem.GetDateTime());
                                     System.Diagnostics.Debug.WriteLine($"Received temperature message for sensor {sensorId}");
                                     break;
                                 case "Humidity": //should use a better enum for this
-                                    SaveToDatabase(valueElem.GetString() + "%", sensorId, timestampElem.GetDateTime()); //TODO: percentage
+
+                                    SaveToDatabase(valueElem.GetInt32().ToString() + "%", sensorId, timestampElem.GetDateTime()); //TODO: percentage
                                     System.Diagnostics.Debug.WriteLine($"Saved humidity message for sensor {sensorId}");
                                     break;
                                 default:
@@ -186,9 +194,9 @@ namespace HydroMonitor.Services
                             }
                         }
                     }
-                }
+                
                 System.Diagnostics.Debug.WriteLine($"Received Message: {m.ApplicationMessage.ConvertPayloadToString()}");
-                return Task.CompletedTask;
+                //return Task.CompletedTask;
             };
             _client = mqttClient;
         }
@@ -201,16 +209,16 @@ namespace HydroMonitor.Services
         //}
 
 
-        public static async void SaveToDatabase(Object value, int sensorId, DateTime timestamp)
+        public async void SaveToDatabase(String value, int sensorId, DateTime timestamp)
         {
             SensorReading reading = new SensorReading();
             reading.Timestamp = timestamp;
-            reading.rawValue = value.ToString();
+            reading.rawValue = value;
             //look up the sensor name 
 
             reading.SensorId = sensorId;
 
-            readingDAO.Save(reading);
+            await _readingDAO.Save(reading);
 
         }
 

@@ -48,10 +48,10 @@ Displays a list of all stored sensor components.
     <div class="form-group">
         <label class="form-label">
             Sensor Type
-            <InputSelect class="form-select" @bind-Value="sensor.SensorType" @onselectionchange=typeChanged>
-                @foreach (var type in sensorTypes)
+            <InputSelect class="form-select" @bind-Value="sensor.SensorTypeId" @onchange="typeChanged"> @* this apparently won't bind the object properly *@
+                @foreach (var type in sensorTypes) @* just bind the id for now *@
                 {
-                    <option value="@type">@type.Name</option>
+                    <option value="@type.typeId">@type.Name</option>
                 }
             </InputSelect>
         </label>
@@ -83,9 +83,9 @@ Displays a list of all stored sensor components.
 
     }
 
-    public void typeChanged()
+    public async void typeChanged() //isn't working for some reason
     {
-        sensor.SensorTypeId = sensor.SensorType.typeId;
+        sensor.SensorType = await sensorTypeDAO.Load(sensor.SensorTypeId);
     }
     //WIP... needs EditForm and OnValidSubmit to work properly.
     private void HandleValidSubmit(EditContext editContext)
@@ -104,12 +104,12 @@ Displays a list of all stored sensor components.
 
     public void submit()
     {
+
         //save the sensor
-        if (sensorId == 0 || sensor.SensorId == 0) {
+        if (sensorId == 0 || sensor.SensorId == 0 || sensor.SensorTypeId == 0) {
             //show an error message?
             return;
         }
-
         Regex r = new Regex("^([0-9a-fA-F]{2}(?:[:]?[0-9a-fA-F]{2}){5})$");
         if (sensor.macAddress is null ||  r.Matches(sensor.macAddress).Count == 0)
         {//show an error message?
@@ -117,25 +117,23 @@ Displays a list of all stored sensor components.
             return;
         }
         if (sensor.macAddress is not null)
-            MQTTService.UnpublishHookMessage(sensor.macAddress);
+            mqttService.UnpublishHookMessage(sensor.macAddress);
 
         sensor.macAddress = sensor.macAddress.ToLower();
         //unpublish the message on the old topic
         //should ideally be done as a transaction so we don't just nuke the hook message for no reason
         sensorDAO.Save(sensor); //theoretically the sensor ID gets updated here
-        MQTTService.PublishHookMessage(sensor);
+        mqttService.PublishHookMessage(sensor);
     }
     public async Task runMapPicker()
     { //opens the map picker modal
         isModalVisible = true;
     }
 
-
     protected async override void OnParametersSet() {
         this.sensor = await sensorDAO.Load(sensorId ?? 0);
         StateHasChanged();
     }
-
 
     protected override async Task OnInitializedAsync()
     {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HydroMonitor.Interfaces
 {
-    internal interface IRepository<T>
+    public interface IRepository<T>
     { //Represents the basic CRUD operations of a repository.
         public Task<bool> Save(T obj);
         public Task<T> Load(int pk);
