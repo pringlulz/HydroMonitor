@@ -1,12 +1,57 @@
 ﻿@page "/viewMap"
+@using HydroMonitor.Models
+@using HydroMonitor.Repository
+@using HydroMonitor.Services
+
+@inject SensorDAO sensorDAO;
+@inject SensorLocationDAO locationDAO;
 
 <h3>Map</h3>
+<div class="alert alert-info">Displays a map of all the sensor locations.</div>
+<div class="modal-content">
+    <Image Src="/images/floorplandesign.jpg">
+    </Image>
+    @{
+        var pinColour = "";
+    }
+    @foreach (var location in locationList)
+    {
+        switch (pinColour)
+        { /*TODO: better system for colours*/
+            case "":
+                pinColour = "blue";
+                break;
+            case "blue":
+                pinColour = "red";
+                break;
+            case "red":
+                pinColour = "yellow";
+                break;
+            case "yellow":
+                pinColour = "";
+                break;
+        }
 
-Displays a map of all the sensor locations.
-@* <Image Source="floorplandesign.jpg"></Image> *@
-<img src="Resources\Images\floorplandesign.jpg" ismap>
+        <MapMarker pinCoordinates="location.GetCoordinates()" pinColour="@(pinColour)"></MapMarker>
+    }
+</div>
 
 
 @code {
+    List<Sensor> sensorList;
+    List<SensorLocation> locationList = new List<SensorLocation>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.sensorList = await sensorDAO.Load();
+        foreach (var item in sensorList)
+        {
+            locationList.Add(await locationDAO.Load(item.SensorId));
+        }
+
+
+        StateHasChanged();
+    }
+
 
 }

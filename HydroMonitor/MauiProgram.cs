@@ -25,6 +25,7 @@ namespace HydroMonitor
 
             builder.Services.AddSingleton<SensorTypeDAO>();
             builder.Services.AddSingleton<SensorReadingDAO>();
+            builder.Services.AddSingleton<SensorLocationDAO>();
             builder.Services.AddSingleton<GeolocationService>();
             builder.Services.AddSingleton<SensorDAO>( sp =>
             {

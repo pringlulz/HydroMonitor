@@ -1,9 +1,30 @@
-﻿<h3>MapPicker</h3>
+﻿
+<Image Src="/images/floorplandesign.jpg"
+    @onclick="locationPicked">
+</Image>
+<MapMarker  pinCoordinates="@pinCoordinates"></MapMarker>
+@* <img src="/images/floorplandesign.jpg" alt="Floor Plan" /> *@
 
-image goes here.
-
+@*todo: add styling colours*@
 
 
 @code {
+    [Parameter]
+    public Tuple<double, double, double> pinCoordinates { get; set; }
 
+    public MapPicker()
+    {
+        this.pinCoordinates = Tuple.Create(0.0, 0.0, 0.0);
+    }
+
+    public void locationPicked(MouseEventArgs e)
+    {
+        double x = e.OffsetX;
+        double y = e.OffsetY;
+
+        pinCoordinates = Tuple.Create(x, y, 0.0);
+        StateHasChanged();
+
+    }
+    
 }

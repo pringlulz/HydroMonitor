@@ -1,0 +1,26 @@
+﻿<span class="bi bi-geo-alt-fill mapmarker@(GetPinColour()) @((pinCoordinates.Item1 == 0.0 && pinCoordinates.Item2 == 0.0) ? "d-none" : "")" style="left: @(pinCoordinates.Item1 - 5)px; top: @(pinCoordinates.Item2 - 5)px"></span>
+
+
+@code{
+
+    [Parameter]
+    public Tuple<double, double, double> pinCoordinates { get; set; }
+
+    [Parameter]
+    public String pinColour { get; set; }
+
+    public MapMarker(string pinColour = null)
+    {
+        this.pinCoordinates = Tuple.Create(0.0, 0.0, 0.0);
+        //this.pinColour = "";
+    }
+
+    public String GetPinColour()
+    {
+        return  (String.IsNullOrEmpty(pinColour) ? "" : "-" + pinColour);
+    }
+
+
+
+
+}

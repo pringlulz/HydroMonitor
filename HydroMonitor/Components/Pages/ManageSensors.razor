@@ -9,6 +9,7 @@
 
 @inject SensorDAO sensorDAO;
 @inject SensorTypeDAO sensorTypeDAO;
+@inject SensorLocationDAO locationDAO;
 @inject NavigationManager Navigation;
 @inject MQTTService mqttService;
 
@@ -28,8 +29,8 @@ Displays a list of all stored sensor components.
 @if (sensor != null)
 {
 
-    <HydroMonitor.Components.Modal IsVisible="@isModalVisible" >
-        <MapPicker></MapPicker>
+    <HydroMonitor.Components.Modal IsVisible="@isModalVisible" OnConfirm="() => SetLocation(picker.pinCoordinates)">
+        <MapPicker @ref="picker" pinCoordinates="location is null ? Tuple.Create(0.0, 0.0, 0.0) : location.GetCoordinates()"></MapPicker>
 
     </HydroMonitor.Components.Modal>
     <div class="form-group">
@@ -74,9 +75,14 @@ Displays a list of all stored sensor components.
     public int? sensorId { get; set; }
 
     Sensor? sensor;
+    SensorLocation? location;
     private List<SensorType>? sensorTypes { get; set; } = new List<SensorType>();
     private ValidationMessageStore messageStore;
     private bool isModalVisible = false;
+
+    MapPicker picker;
+
+
 
     public ManageSensors()
     {
@@ -99,6 +105,15 @@ Displays a list of all stored sensor components.
             return;
         }
         submit();
+    }
+
+    public async Task SetLocation(Tuple<double,double,double> pinCoords)
+    {
+        SensorLocation location = new SensorLocation();
+        location.SensorId = sensorId ?? 0;
+        location.SetCoordinates(pinCoords);
+        this.location = location;
+        await locationDAO.Save(location);
     }
 
 

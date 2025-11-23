@@ -1,0 +1,17 @@
+.mapmarker, .mapmarker-blue, .mapmarker-red, .mapmarker-yellow {
+    background: rgba(#ffffff91); /*transparent white*/
+    position: absolute !important;
+    font-size: 2rem !important;
+}
+ /*TODO: better system for colours*/
+.mapmarker-blue {
+    color:blue;
+}
+
+.mapmarker-red {
+    color: red;
+}
+
+.mapmarker-yellow{
+    color:yellow;
+}

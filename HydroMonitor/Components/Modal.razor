@@ -1,18 +1,23 @@
 ﻿@* courtesy of copilot *@
 
 <div class="modal @(IsVisible ? "show" : "")" style="display:@(IsVisible ? "block" : "none")">
-    <span class="modal-close float-end"><button @onclick="Close">x</button></span>
-    <div class="modal-content">
+    <span class="modal-close float-end"><button class="btn btn-close" @onclick="Close" title="close"></button></span>
+    <div class="modal-content overflow-scroll">
         
         @ChildContent
 
     </div>
+    @if (OnConfirm.HasDelegate)
+    {
+        <button class="btn btn-primary" @onclick="Confirm">Confirm</button>
+    }
 </div>
 
 @code {
 
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
     [Parameter] public RenderFragment ChildContent { get; set; }
 
     private async Task Close()
@@ -20,5 +25,13 @@
         IsVisible = false;
         await OnClose.InvokeAsync();
     }
+
+    private async Task Confirm()
+    {
+        IsVisible = false;
+        await OnConfirm.InvokeAsync();
+        await OnClose.InvokeAsync();
+    }
+
 
 }
