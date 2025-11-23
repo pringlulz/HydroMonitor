@@ -23,8 +23,8 @@ namespace HydroMonitor.Services
         }
 
         public static List<String> GetMacAddresses(List<ArpEntity> list)
-        {
-            return list.Select(i => i.MacAddress).ToList();
+        { //fun fact! the test I wrote for this action actually caught the dashes and colons issue! isn't that neat
+            return list.Select(i => i.MacAddress.Replace('-', ':')).ToList();
         }
         public static List<ArpEntity> GetArpResult() {
 
