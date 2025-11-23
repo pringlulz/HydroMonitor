@@ -36,7 +36,7 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+        <!-- <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion> -->
     </PropertyGroup>
 
     <ItemGroup>
@@ -69,6 +69,14 @@
         <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
         <PackageReference Include="Syncfusion.Blazor.Charts" Version="31.2.5" />
 	    <PackageReference Include="Syncfusion.Maui.Toolkit" Version="1.0.7" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiImage Include="wwwroot\images\floorplandesign.jpg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="wwwroot\images\floorplandesign.jpg" />
     </ItemGroup>
 
 </Project>
