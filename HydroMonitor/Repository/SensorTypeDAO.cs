@@ -15,7 +15,7 @@ namespace HydroMonitor.Repository
 
         public SensorTypeDAO()
         {
-            AddDefaultSensorTypes();
+            
         }
 
 

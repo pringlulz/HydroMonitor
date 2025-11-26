@@ -15,18 +15,19 @@ namespace HydroMonitorTests
     public class MQTTServiceTests
     {
         private MQTTService service;
-        private SensorTypeDAO sensorTypeDAO;
-        private SensorDAO sensorDAO;
-        private SensorReadingDAO readingDAO;
+        private MockSensorTypeDAO sensorTypeDAO;
+        private MockSensorDAO sensorDAO;
+        private MockSensorReadingDAO readingDAO;
+        Random random = new Random();
 
 
         [TestInitialize]
         public void init()
         {
             //TODO: replace these with mocked versions later
-            sensorTypeDAO = new SensorTypeDAO();
-            sensorDAO =  new SensorDAO(sensorTypeDAO); //new MockSensorDAO();
-            readingDAO = new SensorReadingDAO();
+            sensorTypeDAO = new MockSensorTypeDAO();
+            sensorDAO =  new MockSensorDAO(sensorTypeDAO); //new MockSensorDAO();
+            readingDAO = new MockSensorReadingDAO();
 
             service = new MQTTService(sensorDAO, readingDAO);
         }
@@ -34,8 +35,15 @@ namespace HydroMonitorTests
         [TestMethod]
         public void BrokerTest()
         {
+            //how to test the service when all the important bits are private?
             service.SetupBroker();
+            var sensorId = random.Next();
+            for (int i = 0; i < 10; i++)
+            {
+                service.SaveToDatabase(Convert.ToString(random.NextDouble() * 10), sensorId, DateTime.Now);
+            }
 
+            Assert.IsTrue(readingDAO.Get(sensorId).Count == 10);
             
         }
 

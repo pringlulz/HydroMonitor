@@ -9,14 +9,14 @@ using HydroMonitor.Repository;
 
 namespace HydroMonitorTests.MockRepositories
 {
-    public class MockSensorDAO
+    public class MockSensorDAO : SensorDAO
     {
-        private Random rnd;
-        public MockSensorDAO()
+        private Random rnd = new Random();
+
+        public MockSensorDAO(IRepository<SensorType> stDAO) : base(stDAO)
         {
-            rnd = new Random();
         }
- 
+
         public Task<Sensor> Load(int pk)
         {
             Sensor fake = new Sensor();
