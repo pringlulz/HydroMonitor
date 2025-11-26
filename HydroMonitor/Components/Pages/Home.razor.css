@@ -1,0 +1,38 @@
+
+
+div.circle {
+    height: 3em;
+    width: 3em;
+    border-radius: 50%;
+    background-image: linear-gradient(to bottom, blue, aqua);
+    position: relative;
+    animation-duration: 8s;
+    animation-iteration-count: infinite
+}
+
+div.logo > div:nth-child(1) div  {
+    animation-name: logoAnimation1;
+    animation-delay:0s;
+
+}
+div.logo > div:nth-child(2) div {
+    animation-name: logoAnimation1;
+    animation-delay: 0.15s;
+}
+div.logo > div:nth-child(3) div {
+    animation-name: logoAnimation1;
+    animation-delay: 0.25s;
+}
+
+div .logo {
+    
+}
+@keyframes logoAnimation1 {
+    0% {left: 0px; top: 0px;}
+    50% {left: 5px; top: 50px; }
+    75% {left: -5px; top: 25px;}
+    100% {left: 0px; top:0px;}
+}
+@keyframes logoAnimation2 {
+    0% {left}
+}
