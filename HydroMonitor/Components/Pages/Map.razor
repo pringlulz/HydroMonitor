@@ -5,8 +5,12 @@
 
 @inject SensorDAO sensorDAO;
 @inject SensorLocationDAO locationDAO;
+@inject GeolocationService geoService;
 
 <h3>Map</h3>
+@if (!geoEnabled) {
+    <div class="alert alert-warning">Location services are disabled. If you want to see your location on the map, please enable location services! </div>
+}
 <div class="alert alert-info">Displays a map of all the sensor locations.</div>
 <div class="modal-content">
     <Image Src="/images/floorplandesign.jpg">
@@ -38,8 +42,11 @@
 
 
 @code {
+    private readonly PeriodicTimer _periodicTimer = new(TimeSpan.FromSeconds(5));
     List<Sensor> sensorList;
     List<SensorLocation> locationList = new List<SensorLocation>();
+
+    bool geoEnabled { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,9 +55,22 @@
         {
             locationList.Add(await locationDAO.Load(item.SensorId));
         }
-
-
+        if (await geoService.IsGeolocationEnabled())
+        {
+            geoEnabled = true;
+            RunTimer();
+        }
         StateHasChanged();
+    }
+
+    protected async void RunTimer()
+    { // from https://stackoverflow.com/questions/72711306/what-is-the-best-way-to-use-periodictimer-for-refresh-component-in-blazor-server
+
+        while (await _periodicTimer.WaitForNextTickAsync())
+        {
+            System.Diagnostics.Debug.WriteLine(geoService.GetCurrentLocation());
+        }
+
     }
 
 

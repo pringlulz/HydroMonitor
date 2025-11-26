@@ -1,0 +1,110 @@
+﻿@using HydroMonitor.Models
+
+
+@* Shows the graph for a given sensor.*@
+
+<div class="container-fluid overflow-x-auto">
+    <LineChart @ref="lineChart" Width="800" />
+</div>
+
+
+@code {
+    private LineChart lineChart = default!; //! suppresses null warnings
+    private LineChartOptions lineChartOptions = default!; //what's this default thing? that seems cool
+    private ChartData chartData = default!;
+    private List<SensorReading> readings;
+    private Sensor sensor;
+
+    protected override void OnInitialized()
+    {
+        chartData = new ChartData
+        {
+            // Labels = GetDataLabels(6), //6 x labels, TODO: replace with the sensor reading timestamps
+            // Datasets = GetDefaultDataSets(1) //1 y label, TODO: replace with the sensor readings
+        };
+        lineChartOptions = new()
+        {
+            IndexAxis = "x",
+            //Interaction = new Interaction { MOde = InteractionMode.Index, Intersect = false},
+            Responsive = true,
+        };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await lineChart.InitializeAsync(chartData, lineChartOptions);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+    private async Task AddDatasetAsync()
+    {
+        if (chartData is null | chartData.Datasets is null) return;
+
+        //var chartDataset =
+    }
+
+
+
+
+    private LineChartDataset GetLineChartDataset()
+    {
+        var c = ColorUtility.CategoricalTwelveColors[1].ToColor();
+
+        return new LineChartDataset
+        {
+            Label = sensor.Name,
+            Data = GetSensorData(),
+            BackgroundColor = c.ToRgbaString(),
+            BorderColor = c.ToRgbString(),
+            PointRadius = new List<double> { 5 },
+            PointHoverRadius = new List<double> { 8 },
+        };
+
+    }
+
+
+    private List<double?> GetSensorData()
+    {
+        var data = new List<double?>();
+        foreach (var reading in readings)
+        {
+            data.Add(reading.doubleValue());
+        }
+        return data;
+    }
+
+
+
+    private DateTime[] GetDataLabels(int numberOfLabels) //TODO: adding the sensor reading timestamps
+    {
+        List<DateTime> labels = new List<DateTime>();
+        if (readings.Count == 0)
+        {
+            labels.Add(DateTime.Now.AddMinutes(-5.0));
+            labels.Add(DateTime.Now);
+        }
+        else
+        {
+            var minLabel = readings.MinBy(r => r.Timestamp).Timestamp;
+            var maxLabel = readings.MaxBy(r => r.Timestamp).Timestamp;
+            labels.Add(minLabel);
+            var delta = (maxLabel - minLabel) / numberOfLabels;
+            var label = minLabel + delta;
+            labels.Add(label);
+            for (int i = 1; i < (numberOfLabels - 1); i++)
+            {
+                label = label + delta;
+                labels.Add(label);
+            }
+        }
+        return labels.ToArray();
+    }
+
+
+
+
+}

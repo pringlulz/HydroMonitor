@@ -23,7 +23,12 @@ namespace HydroMonitor
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddBlazorBootstrap();
 
-            builder.Services.AddSingleton<SensorTypeDAO>();
+            builder.Services.AddSingleton<SensorTypeDAO>( st =>
+            {
+                SensorTypeDAO stDAO = new SensorTypeDAO();
+                stDAO.AddDefaultSensorTypes();
+                return stDAO;
+            });
             builder.Services.AddSingleton<SensorReadingDAO>();
             builder.Services.AddSingleton<SensorLocationDAO>();
             builder.Services.AddSingleton<GeolocationService>();

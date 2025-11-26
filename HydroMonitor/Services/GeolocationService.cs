@@ -10,8 +10,32 @@ namespace HydroMonitor.Services
     {
         //per MS documentation
         private CancellationTokenSource _cancelTokenSource;
-        public async  Task<string> GetCurrentLocation() {
 
+		public async Task<Boolean> IsGeolocationEnabled()
+		{
+			//Microsoft.Maui.Devices.Sensors.Geolocation.
+			PermissionStatus locationInUsePermission = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+			if (locationInUsePermission == PermissionStatus.Granted)
+			{
+				return true;
+
+			} 
+			else
+			{
+				locationInUsePermission = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+				if (locationInUsePermission == PermissionStatus.Granted)
+				{
+					return true;
+				}
+            }
+			//#if ANDROID
+			//			Microsoft.Maui.ApplicationModel.Platform.AppContext.Android.Locations.LocationManager.GpsProvider
+			//#endif
+			return false;
+		}
+
+        public async Task<string> GetCurrentLocation() 
+		{
 			try
 			{
 				GeolocationRequest request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(10));
