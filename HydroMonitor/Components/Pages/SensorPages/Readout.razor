@@ -1,0 +1,60 @@
+﻿
+@using HydroMonitor.Models
+@using HydroMonitor.Repository
+
+@inject SensorReadingDAO srDAO;
+
+<h3>Readout for sensor: @thisSensor.Name</h3>
+
+<table>
+    <thead>
+        <th>Reading ID</th>
+        <th>Timestamp</th>
+        <td>Type</td>
+        <th>Value</th>
+    </thead>
+    <tbody>
+        @foreach (var reading in readings)
+        {
+            <tr>
+                <td>@reading.readingId</td>
+                <td>@reading.Timestamp</td>
+                <td>@reading.Type.ToString()</td>
+                <td>@reading.rawValue</td>
+            </tr> 
+        }
+        
+   </tbody>
+    
+
+</table>
+
+
+@code {
+
+    [Parameter]
+    public Sensor thisSensor {get;set;}
+    private readonly PeriodicTimer _periodicTimer = new(TimeSpan.FromSeconds(5));
+    public List<SensorReading> readings = new List<SensorReading>(); //initialize to empty list
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        RunTimer();
+    }
+
+
+    protected async void RunTimer()
+    { // from https://stackoverflow.com/questions/72711306/what-is-the-best-way-to-use-periodictimer-for-refresh-component-in-blazor-server
+
+        while (await _periodicTimer.WaitForNextTickAsync())
+        {
+            readings = await srDAO.Get(thisSensor.SensorId);
+            
+            StateHasChanged();
+        }
+
+    }
+
+
+}
