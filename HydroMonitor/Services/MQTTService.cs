@@ -40,6 +40,7 @@ namespace HydroMonitor.Services
             _readingDAO = readingDAO;
             Open();
             SetupBroker();
+            Subscribe("192.168.0.12");
         }
 
         public static void Open()
@@ -124,20 +125,23 @@ namespace HydroMonitor.Services
 
             System.Diagnostics.Debug.WriteLine("Starting subscribe...");
 
+            try
+            {
+                await _client.ConnectAsync(options, CancellationToken.None);
+            } catch (MQTTnet.Adapter.MqttConnectingFailedException)
+            {
+                System.Diagnostics.Debug.WriteLine($"Subscribe failed (broker is probably not running on target TCP server)...");
+                throw;
+            }
+
+
             if (_client.IsConnected == false)
             {
                 throw new Exception("Client is not connected! connect client first.");
             }
 
-            try
-            {
-                await _client.ConnectAsync(options, CancellationToken.None);
-            }
-            catch (MQTTnet.Adapter.MqttConnectingFailedException)
-            {
-                System.Diagnostics.Debug.WriteLine($"Subscribe failed (broker is probably not running on target TCP server)...");
-                throw;
-            }
+
+
 
             //TODO: subscribe to specific topics per sensor.
             var topicFilter = _factory.CreateTopicFilterBuilder().WithTopic("hydromon/sensor/#").WithAtLeastOnceQoS();
@@ -164,7 +168,13 @@ namespace HydroMonitor.Services
                 int sensorId = 0;
                 if (matches.Groups.Count != 0)
                 {
-                    sensorId = Convert.ToInt32(matches.Groups[1].Captures[0].Value);
+                    try
+                    {
+                        sensorId = Convert.ToInt32(matches.Groups[1].Captures[0].Value);
+                    } catch
+                    {
+                        System.Diagnostics.Debug.WriteLine("Unable to parse sensor ID.");
+                    }
                 }
 
                 if (sensorId != 0)

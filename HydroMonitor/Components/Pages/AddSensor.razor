@@ -13,10 +13,18 @@
 
 <h3>Add Sensor</h3>
 <section class="col-lg-6 col-sm-12">
+
+    <div class="form-group">
+        <label class="form-label">Sensor Name</label>
+        <InputText @bind-Value="sensor.Name" class="form-control" />
+    </div>
+
     
     <div class="form-group">
         <label class="form-label">MAC Address</label>
        
+
+
         <InputText @bind-Value="sensor.macAddress" class="form-control" list="addressesOnNetwork" />
         <datalist id="addressesOnNetwork">
             @foreach (var address in macAddresses)

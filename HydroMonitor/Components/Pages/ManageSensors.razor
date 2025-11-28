@@ -29,10 +29,15 @@ Displays a list of all stored sensor components.
 @if (sensor != null)
 {
 
-    <HydroMonitor.Components.Modal IsVisible="@isModalVisible" OnConfirm="() => SetLocation(picker.pinCoordinates)">
+    <HydroMonitor.Components.Modal IsVisible="@isReadoutVisible">
+        <HydroMonitor.Components.Pages.SensorPages.Readout thisSensor="@sensor"></HydroMonitor.Components.Pages.SensorPages.Readout>
+    </HydroMonitor.Components.Modal>
+    <HydroMonitor.Components.Modal IsVisible="@isPickerVisible" OnConfirm="() => SetLocation(picker.pinCoordinates)">
         <MapPicker @ref="picker" pinCoordinates="location is null ? Tuple.Create(0.0, 0.0, 0.0) : location.GetCoordinates()"></MapPicker>
 
     </HydroMonitor.Components.Modal>
+
+
     <div class="form-group">
         <label class="form-label">
             Sensor Name
@@ -58,7 +63,7 @@ Displays a list of all stored sensor components.
         </label>
     </div>
     <div class="form-group">
-        <button class="btn btn-primary col-sm-3" @onclick="runMapPicker">Pick Location</button>
+        <button class="btn btn-primary col-sm-3" @onclick="runMapPicker">Pick Location</button> <button @onclick="showReadout" class="btn btn-primary col-sm-3">View Readout</button>
     </div>
     <div class="form-group">
         <button class="btn btn-primary col-sm-3" @onclick="submit" type="submit">Save</button>
@@ -78,7 +83,8 @@ Displays a list of all stored sensor components.
     SensorLocation? location;
     private List<SensorType>? sensorTypes { get; set; } = new List<SensorType>();
     private ValidationMessageStore messageStore;
-    private bool isModalVisible = false;
+    private bool isPickerVisible = false;
+    private bool isReadoutVisible = false;
 
     MapPicker picker;
 
@@ -116,6 +122,11 @@ Displays a list of all stored sensor components.
         await locationDAO.Save(location);
     }
 
+    public void showReadout()
+    {
+        isReadoutVisible = true;
+    }
+
 
     public void submit()
     {
@@ -142,11 +153,13 @@ Displays a list of all stored sensor components.
     }
     public async Task runMapPicker()
     { //opens the map picker modal
-        isModalVisible = true;
+        isPickerVisible = true;
     }
 
     protected async override void OnParametersSet() {
         this.sensor = await sensorDAO.Load(sensorId ?? 0);
+        isPickerVisible = false;
+        isReadoutVisible = false; //reset these
         StateHasChanged();
     }
 

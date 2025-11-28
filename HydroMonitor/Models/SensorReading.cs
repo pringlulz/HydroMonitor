@@ -9,8 +9,8 @@ namespace HydroMonitor.Models
 {
     public class SensorReading
     {
-        [PrimaryKey] //sqlite-net kinda sucks and doesn't support composite keys. So we gotta do this.
-        private long readingId { get; set; }
+        [PrimaryKey, AutoIncrement] //sqlite-net kinda sucks and doesn't support composite keys. So we gotta do this.
+        public long readingId { get; set; }
 
         [Indexed(Name = "CompositeKey", Order = 1, Unique = true)]
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
@@ -18,7 +18,7 @@ namespace HydroMonitor.Models
         public int SensorId { get; set; }
 
 
-        MeasurementType Type;
+        public MeasurementType Type { get; set; }
         public String? rawValue { get; set; }
         
         public double doubleValue()

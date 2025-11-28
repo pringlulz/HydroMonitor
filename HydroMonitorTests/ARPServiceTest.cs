@@ -30,7 +30,7 @@ namespace HydroMonitorTests
                 Assert.Fail(ex.Message);
             }
         }
-
+        [TestMethod]
         public void TestGetArpResult()
         {
             List<ARPService.ArpEntity> result = ARPService.GetArpResult();
@@ -39,10 +39,6 @@ namespace HydroMonitorTests
 
         }
 
-        public void NegativeTest()
-        {
-
-        }
 
         
     }
