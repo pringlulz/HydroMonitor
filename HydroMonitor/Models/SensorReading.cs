@@ -23,7 +23,15 @@ namespace HydroMonitor.Models
         
         public double doubleValue()
         {
-            return Convert.ToDouble(rawValue);
+            if (Type == MeasurementType.Percentage)
+            {
+                return Convert.ToDouble(rawValue.Replace("%", ""))/100;
+            } 
+            else
+            {
+                return Convert.ToDouble(rawValue);
+            }
+                
         }
     }
 }

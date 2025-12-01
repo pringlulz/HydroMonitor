@@ -49,7 +49,7 @@
 
         while (await _periodicTimer.WaitForNextTickAsync())
         {
-            readings = await srDAO.Get(thisSensor.SensorId);
+            readings = await srDAO.Load(thisSensor.SensorId);
             
             StateHasChanged();
         }

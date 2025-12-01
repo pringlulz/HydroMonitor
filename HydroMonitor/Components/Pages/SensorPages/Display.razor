@@ -1,85 +1,52 @@
 ﻿@using HydroMonitor.Models
+@using HydroMonitor.Repository
 
+@inject SensorReadingDAO srDAO;
+@inject SensorDAO sensorDAO;
 
 @* Shows the graph for a given sensor.*@
 
 <div class="container-fluid overflow-x-auto">
-    <LineChart @ref="lineChart" Width="800" />
+    @if (lineChart != null)
+    {
+        <LineChart @ref="lineChart" Width="800" />
+    }
 </div>
 
 
 @code {
-    private LineChart lineChart = default!; //! suppresses null warnings
+    private LineChart lineChart = new LineChart(); // default!; //! suppresses null warnings
     private LineChartOptions lineChartOptions = default!; //what's this default thing? that seems cool
     private ChartData chartData = default!;
     private List<SensorReading> readings;
     private Sensor sensor;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        sensor =  await sensorDAO.Load(2);
+        readings = await srDAO.Load(2, MeasurementType.Percentage);
+
         chartData = new ChartData
         {
-            // Labels = GetDataLabels(6), //6 x labels, TODO: replace with the sensor reading timestamps
-            // Datasets = GetDefaultDataSets(1) //1 y label, TODO: replace with the sensor readings
+            Labels = GetDataLabels(100), //6 x labels, TODO: replace with the sensor reading timestamps
+            Datasets = new List<IChartDataset>() //1 y label, TODO: replace with the sensor readings
         };
+        chartData.Datasets.Add(GetLineChartDataset());
         lineChartOptions = new()
         {
             IndexAxis = "x",
             //Interaction = new Interaction { MOde = InteractionMode.Index, Intersect = false},
             Responsive = true,
+
         };
+        lineChartOptions.Scales.X!.Title = new ChartAxesTitle { Text = "Timestamp", Display = true };
+        //lineChartOptions.Scales.X!.Type = "time";
+
+        lineChartOptions.Scales.Y!.Title = new ChartAxesTitle { Text = "Value", Display = true };
+        OnAfterRenderAsync(true);
     }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await lineChart.InitializeAsync(chartData, lineChartOptions);
-        }
-        await base.OnAfterRenderAsync(firstRender);
-    }
-
-
-    private async Task AddDatasetAsync()
-    {
-        if (chartData is null | chartData.Datasets is null) return;
-
-        //var chartDataset =
-    }
-
-
-
-
-    private LineChartDataset GetLineChartDataset()
-    {
-        var c = ColorUtility.CategoricalTwelveColors[1].ToColor();
-
-        return new LineChartDataset
-        {
-            Label = sensor.Name,
-            Data = GetSensorData(),
-            BackgroundColor = c.ToRgbaString(),
-            BorderColor = c.ToRgbString(),
-            PointRadius = new List<double> { 5 },
-            PointHoverRadius = new List<double> { 8 },
-        };
-
-    }
-
-
-    private List<double?> GetSensorData()
-    {
-        var data = new List<double?>();
-        foreach (var reading in readings)
-        {
-            data.Add(reading.doubleValue());
-        }
-        return data;
-    }
-
-
-
-    private DateTime[] GetDataLabels(int numberOfLabels) //TODO: adding the sensor reading timestamps
+    //DateTime[]
+    private List<String> GetDataLabels(int numberOfLabels) //TODO: adding the sensor reading timestamps
     {
         List<DateTime> labels = new List<DateTime>();
         if (readings.Count == 0)
@@ -101,10 +68,46 @@
                 labels.Add(label);
             }
         }
-        return labels.ToArray();
+        return labels.Select(date => date.ToString()).ToList();
     }
 
+    private LineChartDataset GetLineChartDataset()
+    {
+        var c = ColorUtility.CategoricalTwelveColors[1].ToColor();
 
+        return new LineChartDataset
+        {
+            Label = sensor.Name,
+            Data = ConvertSensorData(),
+            BackgroundColor = c.ToRgbaString(),
+            BorderColor = c.ToRgbString(),
+            PointRadius = new List<double> { 5 },
+            PointHoverRadius = new List<double> { 8 },
+        };
+
+    }
+
+    private List<double?> ConvertSensorData()
+    {
+        var data = new List<double?>();
+        foreach (var reading in readings)
+        {
+            data.Add(reading.doubleValue());
+        }
+        return data;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (lineChartOptions != null)
+        {
+            if (firstRender)
+            {
+                await lineChart.InitializeAsync(chartData, lineChartOptions);
+            }
+            await base.OnAfterRenderAsync(firstRender);
+        }
+    }
 
 
 }

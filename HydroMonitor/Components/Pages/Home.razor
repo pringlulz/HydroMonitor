@@ -1,6 +1,8 @@
 ﻿@page "/"
 @using Services
+@using Repository
 @inject MQTTService service; //starts the mqtt service when the app starts
+
 <h1>HydroMonitor</h1>
 
 <div class="logo col-sm-2 row mb-xl-5">
@@ -18,6 +20,11 @@
         <li>View the sensors you've already configured.</li>
         <li>Display the data logged by your sensors.</li>
     </ul>
+</section>
+
+<section class="col-sm-12 col-lg-6">
+    <HydroMonitor.Components.Pages.SensorPages.Display></HydroMonitor.Components.Pages.SensorPages.Display>
+
 </section>
 
 
