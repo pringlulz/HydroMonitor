@@ -40,6 +40,12 @@ namespace HydroMonitor.Services
             return ParseArpResult(output);
           }
 
+        public static String GetMacForIP(String IPAddress)
+        {
+            ArpEntity arp = GetArpResult().Find(a => IPAddress.Contains(a.Ip));
+            return arp?.MacAddress.Replace('-', ':');
+        }
+
         private static List<ArpEntity> ParseArpResult(string output)
         {
             var lines = output.Split('\n').Where(l => !string.IsNullOrWhiteSpace(l));

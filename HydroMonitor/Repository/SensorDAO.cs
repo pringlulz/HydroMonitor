@@ -40,6 +40,22 @@ namespace HydroMonitor.Repository
             return result != 0;
         }
 
+        public async Task<Sensor> Load(String macAddress)
+        {
+            await Init();
+            try
+            {
+                Sensor result = await _database.Table<Sensor>().Where(s => s.macAddress.Equals(macAddress)).FirstOrDefaultAsync();
+                if (result == null)
+                    result = new Sensor();
+                return result;
+            }
+            catch (InvalidOperationException)
+            {
+                return new Sensor();
+            }
+        }
+
         public async Task<Sensor> Load(int sensorId)
         {
             await Init();

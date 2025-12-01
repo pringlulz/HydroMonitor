@@ -10,8 +10,10 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Sensor = HydroMonitor.Models.Sensor;
+using System.Collections.ObjectModel;
 
 
 namespace HydroMonitor.Services
@@ -25,14 +27,12 @@ namespace HydroMonitor.Services
         private static MqttClientFactory _factory;
         private readonly SensorReadingDAO _readingDAO;
         private readonly SensorDAO _sensorDAO;
-
-
+        private readonly String ipAddress = "192.168.0.12";
 
         private static string baseTopic = "hydromon/sensor/";
 
         static Regex topicSensorRegex = new Regex(@"sensor/(.+?)/", RegexOptions.Compiled);
         //this defines our different handlers for the different types of sensors 
-
 
         public MQTTService(SensorDAO sensorDAO, SensorReadingDAO readingDAO)
         {
@@ -40,13 +40,13 @@ namespace HydroMonitor.Services
             _readingDAO = readingDAO;
             Open();
             SetupBroker();
-            Subscribe("192.168.0.12");
+            Subscribe(ipAddress);
         }
 
         public static void Open()
         {
             _factory = new MqttClientFactory();
-            _client =  _factory.CreateMqttClient(); //0.9 is the pi, 0.3 is the host machine
+            _client =  _factory.CreateMqttClient(); //0.9 is the pi, 0.12 is the host machine
         }
 
         public Task Close()
@@ -67,29 +67,92 @@ namespace HydroMonitor.Services
             _server = factory.CreateMqttServer(options);
 
             await _server.StartAsync();
-            _server.ClientSubscribedTopicAsync += m =>
-            {
-                System.Diagnostics.Debug.WriteLine("Client subscrbied to topic" + m.TopicFilter);
-                return Task.CompletedTask;
-            };
+            _server.ValidatingConnectionAsync += ConnectionValidator; //check that the client connecting is allowed
+            _server.InterceptingSubscriptionAsync += CheckClientSubscribe; //check that the thing the client is subscribing to is allowed.
             System.Diagnostics.Debug.WriteLine("MQTT Broker is listening.");
 
-            await PublishHookMessages();
+            //await PublishHookMessages();
 
             //_server.
         }
 
-        public async Task PublishHookMessages()
-        {
-            List<Sensor> sensors = await _sensorDAO.Load();
+        private async Task ConnectionValidator(ValidatingConnectionEventArgs arg)
+        { 
+            if (arg.UserName != null)
+            { //if they're smart, they've set their username to be their MAC address.
+                System.Diagnostics.Debug.WriteLine("Remote End Point from the args: " + arg.RemoteEndPoint);
+                String macAddress = ARPService.GetMacForIP(arg.RemoteEndPoint.ToString());
+                if (!arg.UserName.Equals(macAddress))
+                {
+                    arg.ReasonCode = MQTTnet.Protocol.MqttConnectReasonCode.BadUserNameOrPassword;
+                    return;
+                }
 
-            foreach (var sensor in sensors)
-            { //create a message on the broker that the client can listen for. This message tells the client which topic to write to.
-              //This is probably a stupid way to do it - the client can just write to its mac address as the topic probably.
-              //But, at least this way, the client gets to firmly establish a connection with the broker before broadcasting.
-                await PublishHookMessage(sensor);
+                //look up the MAC address in the list of sensors.
+                var sensor = _sensorDAO.Load(arg.UserName);
+                if (sensor.Id == 0)
+                { //sensor is not in the list of sensors, reject the connection.
+                    arg.ReasonCode = MQTTnet.Protocol.MqttConnectReasonCode.NotAuthorized;
+                    return;
+                }
+            }
+            else
+            { //reject
+                if (!arg.RemoteEndPoint.ToString().Contains(ipAddress))
+                    arg.ReasonCode = MQTTnet.Protocol.MqttConnectReasonCode.BadUserNameOrPassword; //_server.DisconnectClientAsync(arg.ClientId);
             }
         }
+
+        private async Task CheckClientSubscribe(InterceptingSubscriptionEventArgs arg)//ClientSubscribedTopicEventArgs arg)
+        {
+            
+            if (arg.TopicFilter.Topic.Contains("setup"))
+            { //priveleged topic - don't let anyone but the authenticated mac address subscribe to this.
+                List<MqttClientStatus> clients = (List<MqttClientStatus>)await _server.GetClientsAsync();
+
+                String macAddress = ARPService.GetMacForIP(clients.Find(c => c.Id.Equals(arg.ClientId)).RemoteEndPoint.ToString());
+
+                //_server.UnsubscribeAsync(arg.ClientId, new Collection<string> {arg.TopicFilter.Topic});
+                var sensor = await  _sensorDAO.Load(macAddress);
+                if (sensor.SensorId == 0)
+                {
+                    arg.Response.ReasonCode = MQTTnet.Protocol.MqttSubscribeReasonCode.NotAuthorized;
+                }
+
+                //reply with a token
+                string clientKey = await SecureStorage.GetAsync(arg.UserName);
+                if (clientKey == null)
+                {   // there's no encryption key currently set for this client
+                    clientKey = Aes.Create().Key.ToString();
+                    await SecureStorage.SetAsync(arg.UserName, clientKey);
+
+                    //send the key back
+                }
+                else
+                { //there's already a key for this client, they should have it.
+                    
+                }
+
+                PublishHookMessage(sensor, clientKey);
+            }
+            //arg.UserName
+
+            System.Diagnostics.Debug.WriteLine("Client subscrbied to topic" + arg.TopicFilter);
+            arg.Response.ReasonCode = default!;
+            arg.Response.ReasonString = default!;
+        }
+
+        //public async Task PublishHookMessages()
+        //{
+        //    List<Sensor> sensors = await _sensorDAO.Load();
+
+        //    foreach (var sensor in sensors)
+        //    { //create a message on the broker that the client can listen for. This message tells the client which topic to write to.
+        //      //This is probably a stupid way to do it - the client can just write to its mac address as the topic probably.
+        //      //But, at least this way, the client gets to firmly establish a connection with the broker before broadcasting.
+        //        await PublishHookMessage(sensor);
+        //    }
+        //}
 
 
         public async Task UnpublishHookMessage(String macAddress)
@@ -101,11 +164,21 @@ namespace HydroMonitor.Services
             });
             System.Diagnostics.Debug.WriteLine($"cleared registration for : {macAddress}");
         }
-
         public async Task PublishHookMessage(Sensor sensor)
+        {// generate a key
+            string clientKey = await SecureStorage.GetAsync(sensor.macAddress);
+            if (clientKey == null)
+            {   // there's no encryption key currently set for this client
+                clientKey = Aes.Create().Key.ToString();
+                await SecureStorage.SetAsync(sensor.macAddress, clientKey);
+            }
+            await PublishHookMessage(sensor, clientKey);
+        }
+
+        public async Task PublishHookMessage(Sensor sensor, String key)
         {
             if (sensor.macAddress == "") { return; } //skip entries with no mac address
-            JsonDocument jsonMessage = JsonDocument.Parse($"{{\"target\": \"{sensor.macAddress}\", \"id\": {sensor.SensorId}}}");
+            JsonDocument jsonMessage = JsonDocument.Parse($"{{\"target\": \"{sensor.macAddress}\", \"id\": {sensor.SensorId}, \"key\": \"{key.ToString()}\" }}");
             var message = new MqttApplicationMessageBuilder().WithTopic($"hydromon/setup/{sensor.macAddress}").WithPayload(jsonMessage.RootElement.GetRawText()).WithRetainFlag(true).Build();
             await _server.InjectApplicationMessage(new InjectedMqttApplicationMessage(message)
             {
@@ -134,14 +207,10 @@ namespace HydroMonitor.Services
                 throw;
             }
 
-
             if (_client.IsConnected == false)
             {
                 throw new Exception("Client is not connected! connect client first.");
             }
-
-
-
 
             //TODO: subscribe to specific topics per sensor.
             var topicFilter = _factory.CreateTopicFilterBuilder().WithTopic("hydromon/sensor/#").WithAtLeastOnceQoS();
