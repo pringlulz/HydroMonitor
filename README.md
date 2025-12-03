@@ -2,19 +2,31 @@
 
 HydroMonitor is a .NET MAUI Blazor application leveraging MQTTnet to provide a home or office leak detection and environmental monitoring system.
 
-Dependencies:
+It works in tandem with an MQTT application running on a Raspberry Pi or other device supporting Python to give you real-time insights into the hydrological state of your facility.
+
+## Key Features
+- Map feature to easily locate sensors anywhere in your facility.
+- Geolocation feature to help guide you to find sensors in difficult to reach locations.
+- Blazor Bootstrap Charts to visualize all your sensor data.
+
+### Dependencies:
  - Blazor Bootstrap
  - MQTTNet
  - .NET MAUI
 
+## Installation Instructions
+1. Build the code from source using Visual Studio. Ensure you get the appropriate dependencies from NuGet.
+2. Run the .exe to launch the app.
+3. Configure the Python code to use your PC's IP address as the BROKER_ADDRESS.
+4. Run the python code on your device. HydroMonitor will start receiving data.
 
 #Devlog
 
-##Stage Zero - Sensors
+## Stage Zero - Sensors
 Despite not technically being in scope for the project, I did use the knowledge gained from the API class to get a raspberry Pi with a mosquitto broker working for sending data over the network. 
 
 
-##Stage One - Data
+## Stage One - Data
 I decided to tackle the start of this project the way any good project is, with the backend. I implemented the SQLite database the same way as was shown in class. The Sensor object was dependent on the SensorType object we tacked on to help the user interface from having to use hardcoded constants. This will make it possible to expand the app to include other types of sensors (for example, leak detection, drywall sensors) in the future without having to add in constants all over the codebase.
 
 The problem with this approach is that the sql-pcl library being used, while quick to add new types of objects, doesn't really deal with relational stuff well. It also doesn't like using GUIDs as primary keys, so we had to pivot and use sequential integer identifiers instead. Whenever I changed the data model, I had to ad-hoc execute a statement to alter the table to include the new fields. Being able to build a database directly from your Model classes is neat, but only really a better choice when you've already got your model figured out.
