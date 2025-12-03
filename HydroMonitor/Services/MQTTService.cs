@@ -2,18 +2,20 @@
 using HydroMonitor.Repository;
 using MQTTnet;
 using MQTTnet.Server;
+using Syncfusion.Blazor.Charts.Chart.Internal;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
+using static Microsoft.Maui.ApplicationModel.Permissions;
 using Sensor = HydroMonitor.Models.Sensor;
-using System.Collections.ObjectModel;
 
 
 namespace HydroMonitor.Services
@@ -71,7 +73,8 @@ namespace HydroMonitor.Services
             _server.InterceptingSubscriptionAsync += CheckClientSubscribe; //check that the thing the client is subscribing to is allowed.
             System.Diagnostics.Debug.WriteLine("MQTT Broker is listening.");
 
-            //await PublishHookMessages();
+            
+            await PublishHookMessages();
 
             //_server.
         }
@@ -132,8 +135,6 @@ namespace HydroMonitor.Services
                 { //there's already a key for this client, they should have it.
                     
                 }
-
-                PublishHookMessage(sensor, clientKey);
             }
             //arg.UserName
 
@@ -142,17 +143,20 @@ namespace HydroMonitor.Services
             arg.Response.ReasonString = default!;
         }
 
-        //public async Task PublishHookMessages()
-        //{
-        //    List<Sensor> sensors = await _sensorDAO.Load();
+        public async Task PublishHookMessages()
+        {
+            List<Sensor> sensors = await _sensorDAO.Load();
 
-        //    foreach (var sensor in sensors)
-        //    { //create a message on the broker that the client can listen for. This message tells the client which topic to write to.
-        //      //This is probably a stupid way to do it - the client can just write to its mac address as the topic probably.
-        //      //But, at least this way, the client gets to firmly establish a connection with the broker before broadcasting.
-        //        await PublishHookMessage(sensor);
-        //    }
-        //}
+            foreach (var sensor in sensors)
+            { //create a message on the broker that the client can listen for. This message tells the client which topic to write to.
+              //This is probably a stupid way to do it - the client can just write to its mac address as the topic probably.
+              //But, at least this way, the client gets to firmly establish a connection with the broker before broadcasting.
+                if (sensor.macAddress != null && sensor.macAddress != "")
+                {
+                    await PublishHookMessage(sensor);
+                }
+            }
+        }
 
 
         public async Task UnpublishHookMessage(String macAddress)
