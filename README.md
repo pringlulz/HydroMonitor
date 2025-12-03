@@ -15,10 +15,11 @@ It works in tandem with an MQTT application running on a Raspberry Pi or other d
  - .NET MAUI
 
 ## Installation Instructions
-1. Build the code from source using Visual Studio. Ensure you get the appropriate dependencies from NuGet.
-2. Run the .exe to launch the app.
-3. Configure the Python code to use your PC's IP address as the BROKER_ADDRESS.
-4. Run the python code on your device. HydroMonitor will start receiving data.
+1. Clone master from the Git repository using Visual Studio.
+2. Build the code from source using Visual Studio. Ensure you get the appropriate dependencies from NuGet.
+3. Run the .exe to launch the app.
+4. Configure the Python code to use your PC's IP address as the BROKER_ADDRESS.
+5. Run the python code on your device. HydroMonitor will start receiving data.
 
 # Devlog
 
