@@ -12,7 +12,7 @@ It works in tandem with an MQTT application running on a Raspberry Pi or other d
 ### Dependencies:
  - Blazor Bootstrap
  - MQTTNet
- - .NET MAUI
+ - .NET MAUI 9.0
 
 ## Installation Instructions
 1. Clone master from the Git repository using Visual Studio.
@@ -48,7 +48,7 @@ Well, those five words are doing a lot of heavy lifting. First I tried upgrading
 
 Eventually, after coming back to it a few days later, I found that installing the Blazor Bootstrap library from NuGet, and then manually renaming / copying files into the right locations and adding the references to the .csproj file worked. Score. Now we have as powerful UI library that I'm already familiar with to do the user interface.
 
-Styling the components came pretty quickly, but I wanted to add some validation to the pages when the data got submitted. There are packages for doing this in Blazor using some type of form component, but since I had so much trouble getting the async stuff to work, I didn't want to chance rewriting the whole thing again.
+Styling the components came pretty quickly, but I wanted to add some validation to the pages when the data got submitted. I spent about an hour or so trying to get the form component to work, but realized it'd be a lot more involved than I thought. There are packages for doing this in Blazor using some type of form component, but since I had so much trouble getting the async stuff to work, I didn't want to chance rewriting the whole thing again.
 
 I thought it might be cool to have the user interface have a pool / water effect like [that one meme](https://chameleonmemes.com/wp-content/uploads/2024/03/What-is-the-point-fo-this.jpeg) so I searched around online, but didn't really find one. I asked Copilot to generate one for me which had a pulsating gradient effect. The svg filter for a wavy effect it provided didn't work, so I spent an hour or two messing around trying to get the syntax to work. It looked the exact same as other exmaples but seemed to not even register. Maybe MAUI Blazor doesn't support that feature? I gave up on the idea.
 
