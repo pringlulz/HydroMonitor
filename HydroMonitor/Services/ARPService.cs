@@ -19,7 +19,10 @@ namespace HydroMonitor.Services
         }
         public static List<String> GetMacAddresses()
         {
-            return GetMacAddresses(GetArpResult());
+            //remove invalid interfaces
+            return GetMacAddresses(GetArpResult()).Where(m => !(new List<string> {
+                "ff:ff:ff:ff:ff:ff", "01:00:5e:00:00:16", "01:00:5e:00:00:fb", "01:00:5e:00:00:fc",
+            "01:00:5e:7f:ff:fa"}.Contains(m))).ToList();
         }
 
         public static List<String> GetMacAddresses(List<ArpEntity> list)
