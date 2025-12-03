@@ -34,19 +34,21 @@ namespace HydroMonitor.Services
 			return false;
 		}
 
-        public async Task<string> GetCurrentLocation() 
+        public async Task<Location> GetCurrentLocation() 
 		{
 			try
 			{
 				GeolocationRequest request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(10));
 				_cancelTokenSource = new CancellationTokenSource();
 				Location location = await Geolocation.Default.GetLocationAsync(request, _cancelTokenSource.Token);
-				return location.ToString();
+				return location;
+				//
 			}
 			catch (Exception ex)
 			{
-				//unable to get location
-				throw;
+                //unable to get location
+                System.Diagnostics.Debug.WriteLine("Unable to get location", ex);
+                throw;
 			}
 
         }

@@ -8,7 +8,7 @@
 @inject SensorDAO sensorDAO; //add the singleton from the application context
 @inject SensorTypeDAO sensorTypeDAO;
 @inject GeolocationService geolocation;
-@* @inject List<SensorType> SensorTypes; *@ 
+
 
 
 <h3>Add Sensor</h3>
@@ -22,9 +22,7 @@
     
     <div class="form-group">
         <label class="form-label">MAC Address</label>
-       
-
-
+        @* uses ARPService to scan the network for existing MAC addresses. *@
         <InputText @bind-Value="sensor.macAddress" class="form-control" list="addressesOnNetwork" />
         <datalist id="addressesOnNetwork">
             @foreach (var address in macAddresses)
@@ -36,12 +34,12 @@
     <ul>
 
     </ul>
-    @* MAYBE: scan the local network first and present a list of valid IP addresses? *@
+    
     <div class="form-group">
         <label class="form-label">Sensor Type
             <InputSelect class="form-select" @bind-Value="selectedType" @onselectionchange=typeChanged>
                 @foreach (var type in sensorTypes)
-                {
+                { // list of different sensor types.
                     <option value="@type">@type.Name</option>
                 }
             </InputSelect>
@@ -50,14 +48,7 @@
     <button class="btn btn-primary col-sm-3" @onclick="submit">Save</button>
 </section>
 
-<section class="col-lg-6 col-sm-12">
-    @* map goes here*@
-    <Image Source="dotnet_bot.png"/>
-
-
-</section>
-
-
+@* Leave picking the map location to the other screen since it's on a different object anyway*@
 
 @code {
 
@@ -67,7 +58,7 @@
     private List<String> macAddresses { get; set; } = new List<String>();
 
     protected override async Task  OnInitializedAsync()
-    {
+    { //populate all the lists and things that will throw an error if it's a null value
         sensor = new Sensor();
         sensorTypes = await sensorTypeDAO.Load();
         System.Diagnostics.Debug.WriteLine($"loaded sensor type list");
@@ -77,15 +68,9 @@
 
 
     public void typeChanged()
-    {
-       
+    { //Couldn't get the type to map directly so we'll just take the typeId and go with that.
         sensor.SensorType = selectedType;
         sensor.SensorTypeId = selectedType.typeId;
-    }
-
-    public async void displayMapLocation()
-    {
-        
     }
 
 

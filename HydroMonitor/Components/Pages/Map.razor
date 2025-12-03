@@ -38,6 +38,13 @@
 
         <MapMarker pinCoordinates="location.GetCoordinates()" pinColour="@(pinColour)"></MapMarker>
     }
+
+    @if (geoEnabled)
+    { //add an extra pin for the user's location
+      <MapMarker pinCoordinates="getUserCoordinates()" pinColour="@(pinColour)"></MapMarker>
+    }
+
+
 </div>
 
 
@@ -45,6 +52,7 @@
     private readonly PeriodicTimer _periodicTimer = new(TimeSpan.FromSeconds(5));
     List<Sensor> sensorList;
     List<SensorLocation> locationList = new List<SensorLocation>();
+    private Location userLocation;
 
     bool geoEnabled { get; set; }
 
@@ -56,18 +64,25 @@
             locationList.Add(await locationDAO.Load(item.SensorId));
         }
         if (await geoService.IsGeolocationEnabled())
-        {
+        { // start the timer only if we can update the position
             geoEnabled = true;
             RunTimer();
         }
         StateHasChanged();
     }
 
+    protected Tuple<double,double,double> getUserCoordinates()
+    { //TODO: convert the user's coordinates into map coordinates
+        return Tuple.Create(userLocation.Latitude, userLocation.Longitude, userLocation.Altitude ?? 0.0);
+    }
+
+
     protected async void RunTimer()
     { // from https://stackoverflow.com/questions/72711306/what-is-the-best-way-to-use-periodictimer-for-refresh-component-in-blazor-server
 
         while (await _periodicTimer.WaitForNextTickAsync())
         {
+            userLocation = await geoService.GetCurrentLocation();
             System.Diagnostics.Debug.WriteLine(geoService.GetCurrentLocation());
         }
 

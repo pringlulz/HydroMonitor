@@ -5,7 +5,13 @@
 
 <div class="nav-scrollable">
     <nav class="flex-column">
-  @foreach (var sensor in sensorList)
+        @if(sensorList.Count == 0)
+        {
+           <div class="nav-item px-3">
+            <strong>No items to display.</strong>    
+           </div>
+        }
+        @foreach (var sensor in sensorList)
     {
         <div class="nav-item px-3">
             <NavLink class="nav-link" href=@($"manageSensors/{sensor.SensorId}") Match="NavLinkMatch.All" >
