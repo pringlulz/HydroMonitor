@@ -53,4 +53,13 @@ Once the tests compiled, I was able to write a test for the ARPService to test t
 
 Testing the MQTTService proved a little more challenging. The test project didn't have any of the dependencies of the main project, so things like sqlite-net-pcl and mqttnet were unavailable. Mocking the DAO objects wasn't too difficult once I found the right pattern, but I got lost trying to mock the MQTT stuff. Since we didn't really cover mocking in the class, I could only go as far as testing anything which didn't have dependencies. Testing the Blazor components themselves was pretty much out of the question.
 
-I spent the final day of the project implementing a rudimentary security feature. While the MAC address of the sender isn't provided when an MQTT client tries to connect, the IP address is. And since we have the ARPService in place, we can check that the MAC address of the client actually matches with the /setup link they're requesting.
+I spent the final day of the project prior to the second checkin  implementing a rudimentary security feature. While the MAC address of the sender isn't provided when an MQTT client tries to connect, the IP address is. And since we have the ARPService in place, we can check that the MAC address of the client actually matches with the /setup link they're requesting.
+
+
+## Stage Four - Android Native Features
+
+The geocoding stuff was not difficult to implement into the code, thanks to Microsoft's MAUI libraries. Verifying that any of it worked at all, though, was a lot less doable. It took an hour and a half of fiddling about just to get debugging to work. Because I was doing all the development from a virtual machine, the USB debugging didn't work, and I had to get the networking stuff going. 
+
+```adb connect``` didn't work, but ```adb pair``` did... the second time I tried it. Whatever, I'm not asking questions. My app was on my phone and I could test it to my hearts content. I was able to refabulate the geocoding feature to actually do something approximating useful.
+
+
