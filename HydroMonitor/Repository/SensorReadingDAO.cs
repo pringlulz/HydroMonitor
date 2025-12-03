@@ -23,6 +23,15 @@ namespace HydroMonitor.Repository
             await Init();
             return await _database.Table<SensorReading>().Where(sr => sr.SensorId.Equals(sensorId)).ToListAsync();
         }
+
+        public async Task<List<SensorReading>> Load(int sensorId, DateTime start, DateTime end)
+        {
+            await Init();
+            return await _database.Table<SensorReading>().Where(sr => sr.SensorId.Equals(sensorId) 
+                && sr.Timestamp >= start && sr.Timestamp <= end 
+                && sr.Type.Equals(MeasurementType.Percentage)).ToListAsync();
+        }
+
         public async Task<List<SensorReading>> Load(int sensorId, MeasurementType type)
         {
             await Init();

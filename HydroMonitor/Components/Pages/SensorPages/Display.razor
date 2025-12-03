@@ -10,6 +10,10 @@
     @if (lineChart != null)
     {
         <LineChart @ref="lineChart" Width="500" />
+
+        <DateInput @bind-Value="startDate"></DateInput>
+        <DateInput @bind-Value="endDate"></DateInput>
+        <Button @onclick="refresh">Refresh</Button>
     }
 </div>
 
@@ -20,6 +24,8 @@
     private ChartData chartData = default!;
     private List<SensorReading> readings;
     private Sensor sensor;
+    private DateTime startDate = DateTime.Now.AddDays(-7);
+    private DateTime endDate = DateTime.Now;
 
     protected override async Task OnInitializedAsync()
     {
@@ -28,7 +34,7 @@
 
         chartData = new ChartData
         {
-            Labels = GetDataLabels(100), //6 x labels, TODO: replace with the sensor reading timestamps
+            Labels = GetDataLabels(readings.Count), //6 x labels, TODO: replace with the sensor reading timestamps
             Datasets = new List<IChartDataset>() //1 y label, TODO: replace with the sensor readings
         };
         chartData.Datasets.Add(GetLineChartDataset());
@@ -45,6 +51,22 @@
         lineChartOptions.Scales.Y!.Title = new ChartAxesTitle { Text = "Value", Display = true };
         OnAfterRenderAsync(true);
     }
+
+
+    private async void refresh()
+    {   if (startDate != null && endDate != null) {
+            readings = await srDAO.Load(2, startDate, endDate);
+        } else
+        {
+            readings = await srDAO.Load(2, MeasurementType.Percentage);
+        }
+
+            chartData.Datasets.Clear();
+            chartData.Datasets.Add(GetLineChartDataset());
+            chartData.Labels = GetDataLabels(readings.Count);
+            lineChart.UpdateAsync(chartData, lineChartOptions);
+        }
+
     //DateTime[]
     private List<String> GetDataLabels(int numberOfLabels) //TODO: adding the sensor reading timestamps
     {
