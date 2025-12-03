@@ -20,7 +20,7 @@ It works in tandem with an MQTT application running on a Raspberry Pi or other d
 3. Configure the Python code to use your PC's IP address as the BROKER_ADDRESS.
 4. Run the python code on your device. HydroMonitor will start receiving data.
 
-#Devlog
+# Devlog
 
 ## Stage Zero - Sensors
 Despite not technically being in scope for the project, I did use the knowledge gained from the API class to get a raspberry Pi with a mosquitto broker working for sending data over the network. 
